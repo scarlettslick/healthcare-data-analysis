@@ -42,7 +42,7 @@ on this list, collecting $308,494 on a $1.1M bill.
 Hospitals bill $74,730 per case but receive $17,235 which is a gap that adds up to tens of 
 billions of dollars in aggregate.
 
-**6. Individual hospitals tell the starkest story.** Hackensack Meridian in New Jersey 
+**6. Individual hospital overview includes:.** Hackensack Meridian in New Jersey 
 bills $542,972 on average. Stanford Health Care handles 11,001 discharges at $469,691 
 average billed. Faith Community Hospital in tiny Jacksboro, TX collects the best 
 payment ratio of any top-billing hospital.
