@@ -1,0 +1,61 @@
+source: medicare is duckdb.table('medicare_clean.csv') extend {
+}
+
+run: medicare -> {
+  group_by: Rndrng_Prvdr_State_Abrvtn
+  aggregate: total_discharges is Tot_Dschrgs.sum()
+  order_by: total_discharges desc
+}
+
+run: medicare -> {
+  group_by: Rndrng_Prvdr_State_Abrvtn
+  aggregate:
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+    avg_medicare_paid is Avg_Mdcr_Pymt_Amt.avg()
+  order_by: avg_billed desc
+}
+run: medicare -> {
+  where: Rndrng_Prvdr_State_Abrvtn = 'NV'
+  group_by: DRG_Desc
+  aggregate:
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+    total_discharges is Tot_Dschrgs.sum()
+  order_by: avg_billed desc
+  limit: 10
+}
+
+run: medicare -> {
+  where: DRG_Desc = 'ECMO OR TRACHEOSTOMY WITH MV >96 HOURS OR PRINCIPAL DIAGNOSIS EXCEPT FACE, MOUTH AND NEC'
+  group_by: Rndrng_Prvdr_State_Abrvtn
+  aggregate:
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+    total_discharges is Tot_Dschrgs.sum()
+  order_by: avg_billed desc
+  limit: 15
+}
+
+run: medicare -> {
+  group_by: DRG_Desc
+  aggregate:
+    total_discharges is Tot_Dschrgs.sum()
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+  order_by: total_discharges desc
+  limit: 10
+}
+
+run: medicare -> {
+  group_by: 
+    Rndrng_Prvdr_Org_Name
+    Rndrng_Prvdr_City
+    Rndrng_Prvdr_State_Abrvtn
+  aggregate:
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+    total_discharges is Tot_Dschrgs.sum()
+  order_by: avg_billed desc
+  limit: 10
+}

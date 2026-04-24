@@ -1,0 +1,97 @@
+>>>markdown
+# The Hidden Math of Medicare: What Hospitals Bill vs. What They Get Paid
+
+I was curious whether hospital billing actually reflects what gets paid — or whether the numbers on a bill are essentially fictional. Using 2023 CMS Medicare inpatient data covering 146,000+ records across every U.S. state, I set out to find out.
+>>>malloy
+source: medicare is duckdb.table('medicare_clean.csv') extend {
+}
+>>>markdown
+## Finding 1: Which states have the most Medicare discharges?
+I started simple — where are the most Medicare patients being treated?
+>>>malloy
+run: medicare -> {
+  group_by: Rndrng_Prvdr_State_Abrvtn
+  aggregate: total_discharges is Tot_Dschrgs.sum()
+  order_by: total_discharges desc
+}
+>>>markdown
+Florida and California nearly tie at ~442,000 discharges each — despite California having a significantly larger population. This raised a question: if California has more people but similar discharge volume, are its hospitals billing differently?
+>>>markdown
+## Finding 2: The Billing Gap by State
+This is where things got interesting. I looked at what hospitals bill versus what actually gets paid.
+>>>malloy
+run: medicare -> {
+  group_by: Rndrng_Prvdr_State_Abrvtn
+  aggregate:
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+    avg_medicare_paid is Avg_Mdcr_Pymt_Amt.avg()
+  order_by: avg_billed desc
+}
+>>>markdown
+Nevada hospitals bill an average of $157,565 per procedure but receive only $17,855 — less than 12 cents on the dollar. California, Colorado, and DC follow closely. This wasn't a small rounding difference. It was a systematic, nationwide pattern.
+>>>markdown
+## Finding 3: What's Driving Nevada's Extreme Bills?
+I zoomed into Nevada to see which procedures were inflating the average.
+>>>malloy
+run: medicare -> {
+  where: Rndrng_Prvdr_State_Abrvtn = 'NV'
+  group_by: DRG_Desc
+  aggregate:
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+    total_discharges is Tot_Dschrgs.sum()
+  order_by: avg_billed desc
+  limit: 10
+}
+>>>markdown
+ECMO procedures in Nevada are billed at $1.46 million on average — but paid only $173,854. That's an 88% markdown. The pattern holds across cardiac, neurological, and respiratory procedures. It isn't one outlier driving the state average — it's systemic.
+>>>markdown
+## Finding 4: Is This a Nevada Problem or an Everywhere Problem?
+I picked the single most expensive procedure and compared billing across all states.
+>>>malloy
+run: medicare -> {
+  where: DRG_Desc = 'ECMO OR TRACHEOSTOMY WITH MV >96 HOURS OR PRINCIPAL DIAGNOSIS EXCEPT FACE, MOUTH AND NEC'
+  group_by: Rndrng_Prvdr_State_Abrvtn
+  aggregate:
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+    total_discharges is Tot_Dschrgs.sum()
+  order_by: avg_billed desc
+  limit: 15
+}
+>>>markdown
+Every single state bills over $900,000 for this procedure. Nevada isn't unique — it's just near the top of a universally inflated system. Washington state stands out as getting the best payment ratio, collecting $308,494 on a $1.1M bill.
+>>>markdown
+## Finding 5: The Most Common Procedures Nationally
+I wanted to understand volume — which conditions is Medicare actually treating most often?
+>>>malloy
+run: medicare -> {
+  group_by: DRG_Desc
+  aggregate:
+    total_discharges is Tot_Dschrgs.sum()
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+  order_by: total_discharges desc
+  limit: 10
+}
+>>>markdown
+Sepsis dominates at 561,795 discharges — nearly double the next condition. Hospitals bill $74,730 per sepsis case but receive only $17,235. At that volume, the aggregate billing gap for sepsis alone runs into the tens of billions of dollars nationally.
+>>>markdown
+## Finding 6: Which Hospitals Bill the Most?
+Finally I wanted names — which specific hospitals are at the top of the billing scale?
+>>>malloy
+run: medicare -> {
+  group_by:
+    Rndrng_Prvdr_Org_Name
+    Rndrng_Prvdr_City
+    Rndrng_Prvdr_State_Abrvtn
+  aggregate:
+    avg_billed is Avg_Submtd_Cvrd_Chrg.avg()
+    avg_paid is Avg_Tot_Pymt_Amt.avg()
+    total_discharges is Tot_Dschrgs.sum()
+  order_by: avg_billed desc
+  limit: 10
+}
+>>>markdown
+Hackensack Meridian in New Jersey tops the list at $542,972 average billed with only 25 discharges. Stanford Health Care appears with 11,001 discharges at $469,691 average — a world-renowned institution on the same list as small regional hospitals. Faith Community Hospital in tiny Jacksboro, TX stands out for the opposite reason: it actually collects the best payment ratio of any hospital on the list.
