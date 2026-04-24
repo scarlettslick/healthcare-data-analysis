@@ -1,13 +1,13 @@
 >>>markdown
-# The Hidden Math of Medicare: What Hospitals Bill vs. What They Get Paid
+# Medicare Zoomed in: What Hospitals Bill vs. What They Get Paid
 
-I was curious whether hospital billing actually reflects what gets paid — or whether the numbers on a bill are essentially fictional. Using 2023 CMS Medicare inpatient data covering 146,000+ records across every U.S. state, I set out to find out.
+I was curious whether hospital billing actually reflects what gets paid. Using 2023 CMS Medicare inpatient data covering 146,000+ records across every U.S. state, I set out to find out.
 >>>malloy
 source: medicare is duckdb.table('medicare_clean.csv') extend {
 }
 >>>markdown
 ## Finding 1: Which states have the most Medicare discharges?
-I started simple — where are the most Medicare patients being treated?
+Where are the most Medicare patients being treated?
 >>>malloy
 run: medicare -> {
   group_by: Rndrng_Prvdr_State_Abrvtn
@@ -15,10 +15,10 @@ run: medicare -> {
   order_by: total_discharges desc
 }
 >>>markdown
-Florida and California nearly tie at ~442,000 discharges each — despite California having a significantly larger population. This raised a question: if California has more people but similar discharge volume, are its hospitals billing differently?
+Florida and California nearly tie at 442,000 discharges each, despite California having a significantly larger population. This raised a question: if California has more people but similar discharge volume, are its hospitals billing differently?
 >>>markdown
 ## Finding 2: The Billing Gap by State
-This is where things got interesting. I looked at what hospitals bill versus what actually gets paid.
+Thus, I looked at what hospitals bill versus what actually gets paid.
 >>>malloy
 run: medicare -> {
   group_by: Rndrng_Prvdr_State_Abrvtn
@@ -29,10 +29,9 @@ run: medicare -> {
   order_by: avg_billed desc
 }
 >>>markdown
-Nevada hospitals bill an average of $157,565 per procedure but receive only $17,855 — less than 12 cents on the dollar. California, Colorado, and DC follow closely. This wasn't a small rounding difference. It was a systematic, nationwide pattern.
+Nevada hospitals bill an average of $157,565 per procedure but receive only $17,855- less than 12 cents on the dollar. California, Colorado, and DC follow closely. This shows itself to be a systematic, nationwide pattern. I then wanted to I zoom into Nevada to see which procedures were inflating the average.
 >>>markdown
 ## Finding 3: What's Driving Nevada's Extreme Bills?
-I zoomed into Nevada to see which procedures were inflating the average.
 >>>malloy
 run: medicare -> {
   where: Rndrng_Prvdr_State_Abrvtn = 'NV'
@@ -45,10 +44,10 @@ run: medicare -> {
   limit: 10
 }
 >>>markdown
-ECMO procedures in Nevada are billed at $1.46 million on average — but paid only $173,854. That's an 88% markdown. The pattern holds across cardiac, neurological, and respiratory procedures. It isn't one outlier driving the state average — it's systemic.
+ECMO procedures in Nevada are billed at $1.46 million on average, but paid only $173,854. That's an 88% markdown. The pattern holds across cardiac, neurological, and respiratory procedures.
 >>>markdown
 ## Finding 4: Is This a Nevada Problem or an Everywhere Problem?
-I picked the single most expensive procedure and compared billing across all states.
+I picked the single most expensive procedure and compared billing across all states to see.
 >>>malloy
 run: medicare -> {
   where: DRG_Desc = 'ECMO OR TRACHEOSTOMY WITH MV >96 HOURS OR PRINCIPAL DIAGNOSIS EXCEPT FACE, MOUTH AND NEC'
@@ -61,10 +60,10 @@ run: medicare -> {
   limit: 15
 }
 >>>markdown
-Every single state bills over $900,000 for this procedure. Nevada isn't unique — it's just near the top of a universally inflated system. Washington state stands out as getting the best payment ratio, collecting $308,494 on a $1.1M bill.
+Nevada isn't unique, as every single state bills over $900,000 for this procedure. Washington state stands out as getting the best payment ratio, collecting $308,494 on a $1.1M bill.
 >>>markdown
 ## Finding 5: The Most Common Procedures Nationally
-I wanted to understand volume — which conditions is Medicare actually treating most often?
+I wanted to understand volume, so I looked at which conditions is Medicare actually treating most often?
 >>>malloy
 run: medicare -> {
   group_by: DRG_Desc
@@ -76,10 +75,10 @@ run: medicare -> {
   limit: 10
 }
 >>>markdown
-Sepsis dominates at 561,795 discharges — nearly double the next condition. Hospitals bill $74,730 per sepsis case but receive only $17,235. At that volume, the aggregate billing gap for sepsis alone runs into the tens of billions of dollars nationally.
+Sepsis dominates at 561,795 discharges- nearly double the next condition. Hospitals bill $74,730 per sepsis case but receive only $17,235. At that volume, the aggregate billing gap for sepsis alone runs into the tens of billions of dollars nationally.
 >>>markdown
 ## Finding 6: Which Hospitals Bill the Most?
-Finally I wanted names — which specific hospitals are at the top of the billing scale?
+Finally I wanted to see which specific hospitals are at the top of the billing scale?
 >>>malloy
 run: medicare -> {
   group_by:
@@ -94,4 +93,4 @@ run: medicare -> {
   limit: 10
 }
 >>>markdown
-Hackensack Meridian in New Jersey tops the list at $542,972 average billed with only 25 discharges. Stanford Health Care appears with 11,001 discharges at $469,691 average — a world-renowned institution on the same list as small regional hospitals. Faith Community Hospital in tiny Jacksboro, TX stands out for the opposite reason: it actually collects the best payment ratio of any hospital on the list.
+Hackensack Meridian in New Jersey tops the list at $542,972 average billed with only 25 discharges. Stanford Health Care-  a world-renowned institution on the same list as small regional hospitals- appears with 11,001 discharges at $469,691 average. Faith Community Hospital in tiny Jacksboro, TX stands out for the opposite reason: it collects the best payment ratio of any hospital on the list.
